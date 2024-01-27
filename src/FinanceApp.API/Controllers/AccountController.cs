@@ -1,9 +1,10 @@
 ﻿using FinanceApp.API.Application.Models.Payloads.Account;
-using FinanceApp.API.Application.Models.Payloads.Customer;
 using FinanceApp.API.Application.Services.Account;
+using FinanceApp.API.Domain.Entities;
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel;
 
 namespace FinanceApp.API.Controllers
 {
@@ -12,8 +13,6 @@ namespace FinanceApp.API.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
-        private readonly IValidator<CreateAccountRequest> _createAccountRequestValidator;
-        private readonly IValidator<UpdateAccountRequest> _updateAccountRequestValidator;
 
         public AccountController(IAccountService accountService)
         {
@@ -21,13 +20,19 @@ namespace FinanceApp.API.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Create account for a customer",OperationId = "Add account")]
         public async Task<IActionResult> AddAccount([FromBody] CreateAccountRequest request)
         {
             var account = await _accountService.AddAccountAsync(request.CustomerId, request.Alias, request.Currency);
-            return CreatedAtRoute("GetAccount", new { uuid = account.UUID }, account);
+            return Ok(account);
         }
 
         [HttpDelete("{uuid}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Delete account")]
         public async Task<IActionResult> DeleteAccount(Guid uuid)
         {
             var success = await _accountService.DeleteAccountAsync(uuid);
@@ -36,7 +41,10 @@ namespace FinanceApp.API.Controllers
         }
 
         [HttpPut("{uuid}")]
-        public async Task<IActionResult> UpdateAccount(Guid uuid, [FromBody] UpdateAccountRequest request)
+        [ProducesResponseType(typeof(Account),StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Update account alias and currency")]
+        public async Task<ActionResult<Account>> UpdateAccount(Guid uuid, [FromBody] UpdateAccountRequest request)
         {
 
             var account = await _accountService.UpdateAccountAsync(uuid, request.Alias, request.Currency);
@@ -46,6 +54,9 @@ namespace FinanceApp.API.Controllers
 
         }
         [HttpGet("{idNumber}/accounts")]
+        [ProducesResponseType(typeof(List<Account>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string),StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Retrieves customer accounts with identity number")]
         public async Task<IActionResult> GetCustomerAccounts(string idNumber)
         {
             var accounts = await _accountService.GetCustomerAccountsByIdentityNumberAsync(idNumber);

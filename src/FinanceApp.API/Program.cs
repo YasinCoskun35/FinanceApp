@@ -1,15 +1,8 @@
-using System.Reflection;
-using FinanceApp.API.Application.Middleware;
-using FinanceApp.API.Application.Models.Payloads.Account;
-using FinanceApp.API.Application.Models.Payloads.Customer;
-using FinanceApp.API.Application.Services.Account;
-using FinanceApp.API.Application.Services.Customer;
-using FinanceApp.API.Application.Validators.Account;
-using FinanceApp.API.Application.Validators.Customer;
+using FinanceApp.API.Application.Extensions;
 using FinanceApp.API.Data.DbContexts;
-using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,16 +20,15 @@ builder.Services.AddDbContext<FinanceAppDbContext>(x =>
 });
 
 //Services
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddFinanceAppServices();
 
-builder.Services.AddScoped<IValidator<CreateCustomerRequest>, CreateCustomerValidator>();
-builder.Services.AddScoped<IValidator<UpdateCustomerRequest>, UpdateCustomerValidator>(); 
-builder.Services.AddScoped<IValidator<CreateAccountRequest>, CreateAccountValidator>();
-builder.Services.AddScoped<IValidator<UpdateAccountRequest>, UpdateAccountValidator>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.EnableAnnotations(); 
+});
 
 var app = builder.Build();
 
@@ -48,7 +40,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.UseFinanceExceptionHandler();
 app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {

@@ -36,6 +36,7 @@ namespace FinanceApp.API.Application.Middleware
                     exceptionMessage = ex.Message;
                 }
 
+                context.Response.ContentType = "text/plain";
                 await context.Response.WriteAsync(exceptionMessage);
 
             }
